@@ -87,11 +87,57 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log('번역 요청:', message.texts);
       // TODO: Gemini API 호출
       break;
+    case 'injectAndActivate':
+      handleInjectAndActivate(message.tabId);
+      break;
+    case 'statsUpdate':
+      // Content Script에서 받은 통계를 팝업으로 전달
+      forwardStatsToPopup(message.stats);
+      break;
+    case 'translateBatch':
+      console.log('배치 번역 요청:', message);
+      // TODO: Gemini API 배치 호출
+      break;
     default:
       console.log('알 수 없는 메시지:', message);
   }
   
   return true;
 });
+
+/**
+ * 팝업에서 요청한 Content Script 주입 및 활성화
+ */
+async function handleInjectAndActivate(tabId) {
+  try {
+    console.log('🔄 팝업 요청으로 Content Script 주입 및 활성화:', tabId);
+    
+    // Content Script들을 주입
+    await injectContentScripts(tabId);
+    
+    // 활성화 메시지 전송
+    await browser.tabs.sendMessage(tabId, {
+      action: 'activateTranslation'
+    });
+    
+    console.log('✅ 팝업 요청 처리 완료');
+    
+  } catch (error) {
+    console.error('❌ 팝업 요청 처리 실패:', error);
+  }
+}
+
+/**
+ * Content Script에서 받은 통계를 팝업으로 전달
+ */
+function forwardStatsToPopup(stats) {
+  console.log('📊 통계를 팝업으로 전달:', stats);
+  
+  // 현재 활성 팝업이 있다면 메시지 전송
+  // (팝업은 별도 프로세스이므로 direct messaging 불가)
+  // 대신 storage를 통해 상태 공유하거나 content script를 통해 전달
+  
+  // 임시로 콘솔에만 출력 (팝업은 직접 content script와 통신)
+}
 
 console.log('웹 번역기 Background Script 로드 완료'); 

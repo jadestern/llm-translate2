@@ -6,6 +6,7 @@
 class TranslationContentScript {
   constructor() {
     this.textExtractor = null;
+    this.viewportManager = null;
     this.isEnabled = false;
     this.extractedTexts = [];
     
@@ -30,6 +31,14 @@ class TranslationContentScript {
     if (typeof TextExtractor !== 'undefined') {
       this.textExtractor = new TextExtractor();
       console.log('✅ TextExtractor 초기화 완료');
+      
+      // ViewportManager 초기화
+      if (typeof ViewportManager !== 'undefined') {
+        this.viewportManager = new ViewportManager(this.textExtractor);
+        console.log('✅ ViewportManager 초기화 완료');
+      } else {
+        console.error('❌ ViewportManager를 찾을 수 없습니다');
+      }
     } else {
       console.error('❌ TextExtractor를 찾을 수 없습니다');
     }
@@ -47,6 +56,18 @@ class TranslationContentScript {
         case 'extractTexts':
           this.extractAndDisplayTexts();
           break;
+        case 'activateTranslation':
+          this.activateTranslation();
+          break;
+        case 'deactivateTranslation':
+          this.deactivateTranslation();
+          break;
+        case 'getViewportStats':
+          this.sendViewportStats();
+          break;
+        case 'runViewportTest':
+          this.runViewportTest();
+          break;
         default:
           console.log('알 수 없는 메시지:', message);
       }
@@ -56,18 +77,26 @@ class TranslationContentScript {
   }
   
   /**
-   * 텍스트 추출 시작
+   * 텍스트 추출 시작 (ViewportManager 사용)
    */
   startTextExtraction() {
-    if (!this.textExtractor) {
-      console.error('❌ TextExtractor가 초기화되지 않았습니다');
+    if (!this.textExtractor || !this.viewportManager) {
+      console.error('❌ TextExtractor 또는 ViewportManager가 초기화되지 않았습니다');
       return;
     }
     
-    console.log('🚀 텍스트 추출 시작...');
+    console.log('🚀 뷰포트 기반 텍스트 추출 시작...');
     
-    // 우선순위별로 텍스트 추출
-    this.extractTextsByPriority();
+    // ViewportManager로 관찰 시작
+    const observedCount = this.viewportManager.startObserving();
+    
+    // 현재 뷰포트 상태 출력
+    setTimeout(() => {
+      const info = this.viewportManager.getViewportInfo();
+      console.log('📊 뷰포트 상태:', info);
+    }, 1000);
+    
+    return observedCount;
   }
   
   /**
@@ -166,6 +195,76 @@ class TranslationContentScript {
     console.log('제목:', document.title);
     console.log('언어:', document.documentElement.lang || '미지정');
     console.log('뷰포트 크기:', `${window.innerWidth}x${window.innerHeight}`);
+  }
+  
+  /**
+   * 팝업에서 번역 활성화 요청
+   */
+  activateTranslation() {
+    console.log('🎯 팝업에서 번역 활성화 요청');
+    this.isEnabled = true;
+    this.startTextExtraction();
+  }
+  
+  /**
+   * 팝업에서 번역 비활성화 요청
+   */
+  deactivateTranslation() {
+    console.log('⏹️ 팝업에서 번역 비활성화 요청');
+    this.isEnabled = false;
+    
+    if (this.viewportManager) {
+      this.viewportManager.cleanup();
+    }
+  }
+  
+  /**
+   * 뷰포트 통계를 팝업으로 전송
+   */
+  sendViewportStats() {
+    if (!this.viewportManager) {
+      console.warn('⚠️ ViewportManager가 초기화되지 않았습니다');
+      return;
+    }
+    
+    const stats = this.viewportManager.getViewportInfo();
+    console.log('📊 뷰포트 통계 전송:', stats);
+    
+    // 팝업으로 통계 전송 (Background를 통해)
+    browser.runtime.sendMessage({
+      action: 'statsUpdate',
+      stats: stats
+    });
+  }
+  
+  /**
+   * 뷰포트 테스트 실행
+   */
+  runViewportTest() {
+    console.log('🧪 뷰포트 테스트 시작');
+    
+    if (!this.viewportManager) {
+      console.error('❌ ViewportManager가 초기화되지 않았습니다');
+      return;
+    }
+    
+    // 현재 뷰포트 정보 출력
+    const stats = this.viewportManager.getViewportInfo();
+    console.log('📊 현재 뷰포트 통계:', stats);
+    
+    // 뷰포트에 있는 모든 텍스트 출력
+    const viewportTexts = Array.from(this.viewportManager.viewportTexts.values()).flat();
+    const visibleTexts = viewportTexts.filter(t => t.isVisible);
+    
+    console.log('\n👁️ 현재 보이는 텍스트들:');
+    visibleTexts.forEach((textInfo, index) => {
+      console.log(`${index + 1}. [${textInfo.tagName}/${textInfo.priority}] ${textInfo.text.substring(0, 100)}...`);
+    });
+    
+    console.log(`\n✅ 총 ${visibleTexts.length}개의 뷰포트 텍스트 확인 완료`);
+    
+    // 통계 업데이트
+    this.sendViewportStats();
   }
 }
 

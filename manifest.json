@@ -6,16 +6,25 @@
 
   "permissions": [
     "activeTab",
-    "contextMenus", 
-    "storage",
+    "contextMenus",
     "tabs",
-    "http://localhost/*",
-    "https://localhost/*"
+    "storage"
   ],
 
   "background": {
     "scripts": ["background/background.js"],
     "persistent": false
+  },
+
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "웹 번역기",
+    "default_icon": {
+      "16": "icons/icon-128.png",
+      "32": "icons/icon-128.png",
+      "48": "icons/icon-128.png",
+      "128": "icons/icon-128.png"
+    }
   },
 
   "content_scripts": [
@@ -30,6 +39,7 @@
       ],
       "js": [
         "content/textExtractor.js",
+        "content/viewportManager.js",
         "content/contentScript.js"
       ],
       "run_at": "document_end"

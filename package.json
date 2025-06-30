@@ -1,0 +1,22 @@
+{
+  "name": "firefox-translator-addon",
+  "version": "0.1.0",
+  "description": "Firefox addon for web page translation",
+  "scripts": {
+    "dev": "serve test-pages -p 3000",
+    "start": "serve test-pages -p 3000",
+    "build": "echo 'No build process needed for Firefox addon'",
+    "test-server": "serve test-pages -p 8080 --cors"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "keywords": [
+    "firefox",
+    "addon",
+    "translation",
+    "webextension"
+  ],
+  "author": "",
+  "license": "MIT"
+} 

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Translation Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #fafafa;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .priority-high {
+            background-color: #ffebee;
+            padding: 20px;
+            border-left: 4px solid #f44336;
+            margin: 20px 0;
+        }
+        .priority-medium {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 20px 0;
+        }
+        .priority-low {
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-left: 4px solid #4caf50;
+            margin: 20px 0;
+        }
+        .quote {
+            font-style: italic;
+            border-left: 3px solid #ccc;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 40px;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .skip-translate {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px dashed #999;
+        }
+        article {
+            background-color: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Advanced Web Translation Test</h1>
+        <p>Comprehensive testing environment for priority-based text extraction</p>
+    </header>
+
+    <div class="instructions">
+        <h3>🧪 How to Test the Extension</h3>
+        <ol>
+            <li>Load this extension in Firefox using <code>about:debugging</code></li>
+            <li>Right-click anywhere on this page</li>
+            <li>Select <strong>"이 페이지 번역하기"</strong> from the context menu</li>
+            <li>Open browser console (F12) to see detailed extraction results</li>
+            <li>Check the console logs for priority classifications and extracted texts</li>
+        </ol>
+    </div>
+
+    <main class="content">
+        <article>
+            <h2>Priority Testing: High Priority Elements</h2>
+            <div class="priority-high">
+                <h3>Main Article Title</h3>
+                <p>This is the main article content that should have the highest priority for translation. It contains important information that users need to understand immediately when visiting the page.</p>
+            </div>
+        </article>
+
+        <section>
+            <h3>Medium Priority Content</h3>
+            <div class="priority-medium">
+                <h4>Section Headings and Paragraphs</h4>
+                <p>This paragraph should be classified as medium priority since it's within a section element. It provides supporting information that is important but not critical.</p>
+                
+                <p>Another medium priority paragraph that demonstrates how the extension handles multiple text blocks within the same section element.</p>
+            </div>
+        </section>
+
+        <section>
+            <h4>Text Filtering Examples</h4>
+            
+            <p>The system should extract this sentence because it contains meaningful content with multiple words.</p>
+            
+            <div class="quote">
+                "The future belongs to those who believe in the beauty of their dreams." - This quote should be extracted as it contains sentence-level content.
+            </div>
+            
+            <div class="priority-low">
+                <h5>Lower Priority Technical Details</h5>
+                <p>The extension uses sophisticated algorithms that categorize content:</p>
+                <ul>
+                    <li>High Priority: title, h1, h2, h3, main, article elements</li>
+                    <li>Medium Priority: h4, h5, h6, p, section, header, nav elements</li>
+                    <li>Low Priority: div, span, li, td, th, figcaption elements</li>
+                </ul>
+            </div>
+        </section>
+
+        <article>
+            <h2>Text Filtering Test Cases</h2>
+            <p>This extension intelligently filters content. The following should be excluded:</p>
+            
+            <div class="priority-medium">
+                <h4>Items that should be filtered out:</h4>
+                <p>Numbers only: 12345 67890</p>
+                <p>Already translated: 이미 번역된 텍스트는 제외됩니다</p>
+                <p>Mixed content: This sentence has both English and 한국어 mixed together</p>
+                <p>Single words: OK</p>
+                <p>Special characters: !!@#$%^&*()</p>
+                <p>Short text: Hi</p>
+            </div>
+
+            <div class="priority-medium">
+                <h4>Items that should be extracted:</h4>
+                <p>This is a complete sentence with multiple words that provides meaningful information.</p>
+                <p>Another full sentence that contains substantial content worth translating.</p>
+                <p>Technical documentation often includes detailed explanations that users need to understand.</p>
+            </div>
+        </article>
+
+        <nav>
+            <h4>Navigation Section (Medium Priority)</h4>
+            <p>This navigation content should be extracted with medium priority because it's within a nav element.</p>
+        </nav>
+
+        <div class="skip-translate notranslate">
+            <h5>Excluded Content</h5>
+            <p>This content has the 'notranslate' class and should be completely excluded from translation.</p>
+            <code>console.log('This code should also be excluded');</code>
+        </div>
+
+        <div>
+            <h5>Low Priority Div Content</h5>
+            <span>This span text should be classified as low priority since it's in a div/span structure.</span>
+            <p>However, this paragraph within the div should still be medium priority due to the p tag.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <h5>Footer Information (Low Priority)</h5>
+        <p>This footer contains supplementary information that would typically have lower priority for translation. It includes copyright notices and non-critical details.</p>
+        <p>Copyright 2024 - Web Translation Test Suite. Testing priority-based extraction algorithms.</p>
+    </footer>
+
+    <script>
+        // This script content should be completely excluded from translation
+        console.log('Test page loaded - this script content should not be extracted');
+        
+        // Add some dynamic content after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page ready for translation testing');
+        });
+    </script>
+</body>
+</html> 

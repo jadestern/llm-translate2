@@ -7,15 +7,18 @@
 browser.runtime.onInstalled.addListener(() => {
   console.log('웹 번역기 확장 프로그램이 설치되었습니다.');
   
-  // 컨텍스트 메뉴 항목 생성
+  // 컨텍스트 메뉴 항목 생성 (주석 처리 - 팝업 기반 사용을 위해)
+  /*
   browser.contextMenus.create({
     id: "translate-page",
     title: "이 페이지 번역하기",
     contexts: ["page", "selection"]
   });
+  */
 });
 
-// 컨텍스트 메뉴 클릭 이벤트 처리
+// 컨텍스트 메뉴 클릭 이벤트 처리 (주석 처리 - 팝업 기반 사용을 위해)
+/*
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "translate-page") {
     console.log('번역 메뉴가 클릭되었습니다:', {
@@ -40,6 +43,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     }
   }
 });
+*/
 
 /**
  * Content Script들을 탭에 주입

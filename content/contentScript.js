@@ -204,6 +204,49 @@ class TranslationContentScript {
     console.log('🎯 팝업에서 번역 활성화 요청');
     this.isEnabled = true;
     this.startTextExtraction();
+    this.showTranslationIndicators();
+  }
+  
+  /**
+   * 번역 가능한 텍스트에 시각적 표시 추가
+   */
+  showTranslationIndicators() {
+    if (!this.textExtractor) return;
+    
+    const allTexts = this.textExtractor.extractAllTexts();
+    const style = document.createElement('style');
+    style.id = 'translation-indicators';
+    style.textContent = `
+      .translation-target {
+        border: 1px dashed #4CAF50 !important;
+        background: rgba(76, 175, 80, 0.1) !important;
+        position: relative !important;
+      }
+      .translation-target::after {
+        content: "🌐";
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #4CAF50;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    allTexts.slice(0, 10).forEach(textInfo => {
+      textInfo.element.classList.add('translation-target');
+    });
+    
+    console.log(`✅ ${Math.min(allTexts.length, 10)}개 요소에 번역 표시 추가`);
   }
   
   /**
@@ -216,6 +259,22 @@ class TranslationContentScript {
     if (this.viewportManager) {
       this.viewportManager.cleanup();
     }
+    
+    this.hideTranslationIndicators();
+  }
+  
+  /**
+   * 번역 표시 제거
+   */
+  hideTranslationIndicators() {
+    const style = document.getElementById('translation-indicators');
+    if (style) style.remove();
+    
+    document.querySelectorAll('.translation-target').forEach(el => {
+      el.classList.remove('translation-target');
+    });
+    
+    console.log('✅ 번역 표시 제거 완료');
   }
   
   /**

@@ -59,3 +59,12 @@ Content scripts communicate through shared global state and direct method calls
 ## Current Status
 
 Basic extension structure complete with text extraction and viewport management. Translation API integration and user settings are planned next phases.
+
+## Documentation Guidelines
+
+When updating documentation in the `docs/` directory:
+- Focus on interfaces, APIs, and architectural patterns rather than implementation details
+- Avoid copying large code blocks into documentation
+- Prefer showing method signatures, data structures, and communication protocols
+- Keep implementation examples minimal and focused on usage patterns
+- Update interface definitions when code structure changes

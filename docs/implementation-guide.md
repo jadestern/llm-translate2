@@ -4,22 +4,23 @@
 
 ### ✅ 완료된 기능
 - [x] 기본 Firefox 애드온 구조
-- [x] 컨텍스트 메뉴 ("이 페이지 번역하기")
 - [x] 우선순위 기반 텍스트 추출
 - [x] 텍스트 필터링 시스템
 - [x] Content Script 주입 시스템
 - [x] 테스트 페이지 및 환경
+- [x] ViewportManager 뷰포트 관찰 시스템
+- [x] 번역 대상 텍스트 시각적 표시 기능
+- [x] 팝업 기반 번역 활성화/비활성화
 
 ### 🔄 진행 중
 - [ ] Google Gemini API 연동
 - [ ] 번역 결과 DOM 적용
-- [ ] IntersectionObserver 최적화
 
 ### 📅 향후 계획
 - [ ] Debounce 패턴 적용
 - [ ] 배치 번역 처리
 - [ ] 설정 페이지
-- [ ] 팝업 UI
+- [ ] 컨텍스트 메뉴 복원 (선택사항)
 
 ## 🏗️ 핵심 클래스 인터페이스
 
@@ -88,6 +89,24 @@ class TranslationContentScript {
   
   // 페이지 정보 표시
   displayPageInfo(): void
+  
+  // 번역 활성화 (팝업에서 호출)
+  activateTranslation(): void
+  
+  // 번역 비활성화 (팝업에서 호출)
+  deactivateTranslation(): void
+  
+  // 번역 대상 텍스트 시각적 표시
+  showTranslationIndicators(): void
+  
+  // 번역 표시 제거
+  hideTranslationIndicators(): void
+  
+  // 뷰포트 통계 전송
+  sendViewportStats(): void
+  
+  // 뷰포트 테스트 실행
+  runViewportTest(): void
 }
 
 // 추출 결과 인터페이스
@@ -116,6 +135,26 @@ interface ExtractionResult {
 {
   action: 'extractTexts'
 }
+
+// 번역 활성화 (팝업에서)
+{
+  action: 'activateTranslation'
+}
+
+// 번역 비활성화 (팝업에서)
+{
+  action: 'deactivateTranslation'
+}
+
+// 뷰포트 통계 요청
+{
+  action: 'getViewportStats'
+}
+
+// 뷰포트 테스트 실행
+{
+  action: 'runViewportTest'
+}
 ```
 
 ### Content Script → Background
@@ -131,6 +170,18 @@ interface ExtractionResult {
 {
   action: 'translationRequest',
   texts: string[]
+}
+
+// 뷰포트 통계 업데이트
+{
+  action: 'statsUpdate',
+  stats: ViewportStats
+}
+
+// Content Script 주입 및 활성화 요청 (팝업에서)
+{
+  action: 'injectAndActivate',
+  tabId: number
 }
 ```
 
@@ -226,10 +277,14 @@ http://localhost:3000
 3. `manifest.json` 선택
 
 ### 기능 테스트
-1. 테스트 페이지에서 우클릭
-2. "이 페이지 번역하기" 선택
-3. F12로 콘솔 확인
-4. 추출 결과 분석
+1. 애드온 아이콘 클릭하여 팝업 열기
+2. "번역 시작" 버튼 클릭
+3. F12로 콘솔 확인하여 추출 결과 분석
+4. 페이지에서 번역 대상 텍스트 시각적 표시 확인 (초록색 점선 + 🌐 아이콘)
+
+### 컨텍스트 메뉴 테스트 (현재 비활성화)
+- 우클릭 컨텍스트 메뉴는 현재 주석 처리됨
+- 필요시 `background/background.js`에서 주석 해제하여 복원 가능
 
 ## 🔧 디버깅 팁
 

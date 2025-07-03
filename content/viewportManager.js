@@ -230,7 +230,16 @@ class ViewportManager {
         action: 'translateBatch',
         texts: visibleTexts.map(t => t.textForTranslation || t.text),
         priority: 'visible',
-        textInfos: visibleTexts
+        textInfos: visibleTexts.map(t => ({
+          text: t.text,
+          textForTranslation: t.textForTranslation,
+          tagName: t.tagName,
+          priority: t.priority,
+          position: t.position,
+          needsHtmlRestoration: t.needsHtmlRestoration,
+          placeholders: t.placeholders
+          // element는 제외 - DOM 요소는 직렬화할 수 없음
+        }))
       });
     }
     
@@ -241,7 +250,16 @@ class ViewportManager {
           action: 'translateBatch',
           texts: backgroundTexts.map(t => t.textForTranslation || t.text),
           priority: 'background',
-          textInfos: backgroundTexts
+          textInfos: backgroundTexts.map(t => ({
+            text: t.text,
+            textForTranslation: t.textForTranslation,
+            tagName: t.tagName,
+            priority: t.priority,
+            position: t.position,
+            needsHtmlRestoration: t.needsHtmlRestoration,
+            placeholders: t.placeholders
+            // element는 제외 - DOM 요소는 직렬화할 수 없음
+          }))
         });
       }, 2000); // 2초 후 백그라운드 처리
     }

@@ -118,8 +118,8 @@ class ViewportManager {
         return;
       }
       
-      // 텍스트 추출
-      const texts = this.textExtractor.extractTextFromElement(element);
+      // 번역용 텍스트 추출 (HTML 태그 처리 포함)
+      const texts = this.textExtractor.extractTextForTranslation(element);
       
       if (texts.length > 0) {
         // 우선순위 및 태그 정보 추가
@@ -133,7 +133,11 @@ class ViewportManager {
         this.viewportTexts.set(element, texts);
         newTextsToTranslate.push(...texts);
         
-        console.log(`📝 [${element.tagName}] ${texts.length}개 텍스트 추출: ${texts[0]?.text.substring(0, 50)}...`);
+        const displayText = texts[0]?.textForTranslation || texts[0]?.text || '';
+        console.log(`📝 [${element.tagName}] ${texts.length}개 텍스트 추출: ${displayText.substring(0, 50)}...`);
+        if (texts[0]?.needsHtmlRestoration) {
+          console.log(`🏷️ HTML 태그 포함된 문장 감지`);
+        }
       }
     });
     
@@ -224,7 +228,7 @@ class ViewportManager {
     if (visibleTexts.length > 0) {
       browser.runtime.sendMessage({
         action: 'translateBatch',
-        texts: visibleTexts.map(t => t.text),
+        texts: visibleTexts.map(t => t.textForTranslation || t.text),
         priority: 'visible',
         textInfos: visibleTexts
       });
@@ -235,7 +239,7 @@ class ViewportManager {
       setTimeout(() => {
         browser.runtime.sendMessage({
           action: 'translateBatch',
-          texts: backgroundTexts.map(t => t.text),
+          texts: backgroundTexts.map(t => t.textForTranslation || t.text),
           priority: 'background',
           textInfos: backgroundTexts
         });
@@ -292,6 +296,34 @@ class ViewportManager {
       pendingCharacters: pendingCharacters,
       translatedCharacters: translatedCharacters
     };
+  }
+  
+  /**
+   * 번역 결과 적용
+   */
+  applyTranslationResult(element, translations) {
+    const texts = this.viewportTexts.get(element);
+    if (!texts || !translations || translations.length === 0) {
+      return;
+    }
+    
+    try {
+      // 각 텍스트에 번역 적용
+      texts.forEach((textInfo, index) => {
+        if (index < translations.length) {
+          const translatedText = translations[index];
+          this.textExtractor.applyTranslation(textInfo, translatedText);
+          
+          console.log(`✅ 번역 적용: "${textInfo.textForTranslation || textInfo.text}" → "${translatedText}"`);
+        }
+      });
+      
+      // 번역 완료 처리
+      this.markAsTranslated(element);
+      
+    } catch (error) {
+      console.error('❌ 번역 적용 실패:', error);
+    }
   }
   
   /**

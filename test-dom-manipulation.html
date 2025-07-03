@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Manipulation Test</title>
+    <style>
+        .translation-target {
+            border: 2px dashed #4CAF50 !important;
+            background: rgba(76, 175, 80, 0.1) !important;
+            position: relative !important;
+        }
+        .translation-target::after {
+            content: "🌐";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>DOM Manipulation Test</h1>
+    
+    <div class="debug-info" id="debugInfo">
+        디버깅 정보가 여기에 표시됩니다...
+    </div>
+    
+    <div class="instructions">
+        <h3>🧪 How to Test the Extension</h3>
+        <ol id="testList">
+            <li>Load this extension in Firefox using <code>about:debugging</code></li>
+            <li>Right-click anywhere on this page</li>
+            <li>Select <strong>"이 페이지 번역하기"</strong> from the context menu</li>
+            <li>Open browser console (F12) to see detailed extraction results</li>
+            <li>Check the console logs for priority classifications and extracted texts</li>
+        </ol>
+    </div>
+
+    <button onclick="runTest()">텍스트 추출 및 클래스 추가 테스트</button>
+    <button onclick="clearClasses()">클래스 제거</button>
+
+    <!-- TextExtractor 로드 -->
+    <script src="content/textExtractor.js"></script>
+    
+    <script>
+        let textExtractor;
+        
+        function log(message) {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.textContent += message + '\n';
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debugInfo').textContent = '';
+        }
+
+        function runTest() {
+            clearLog();
+            log('🔥 텍스트 추출 및 DOM 조작 테스트 시작');
+            
+            try {
+                // TextExtractor 초기화
+                if (!textExtractor) {
+                    textExtractor = new TextExtractor();
+                    log('✅ TextExtractor 초기화 완료');
+                }
+
+                // 1. extractAllTexts 테스트
+                const allTexts = textExtractor.extractAllTexts();
+                log(`📊 extractAllTexts 결과: ${allTexts.length}개 텍스트`);
+                
+                if (allTexts.length === 0) {
+                    log('❌ 추출된 텍스트가 없습니다!');
+                    return;
+                }
+
+                // 2. li 요소들 확인
+                const liElements = document.querySelectorAll('ol li');
+                log(`🔍 DOM에서 발견된 li 요소: ${liElements.length}개`);
+
+                // 3. 첫 10개 텍스트에 클래스 추가 시뮬레이션
+                log('\n🎯 translation-target 클래스 추가 시작:');
+                
+                let addedCount = 0;
+                allTexts.slice(0, 10).forEach((textInfo, index) => {
+                    if (textInfo.element) {
+                        try {
+                            textInfo.element.classList.add('translation-target');
+                            log(`  ${index + 1}. [${textInfo.tagName}] 클래스 추가 성공: "${textInfo.text.substring(0, 50)}..."`);
+                            addedCount++;
+                        } catch (error) {
+                            log(`  ${index + 1}. [${textInfo.tagName}] 클래스 추가 실패: ${error.message}`);
+                        }
+                    } else {
+                        log(`  ${index + 1}. [${textInfo.tagName}] element가 null입니다!`);
+                    }
+                });
+
+                log(`\n✅ 총 ${addedCount}개 요소에 translation-target 클래스 추가 완료`);
+
+                // 4. 실제로 클래스가 추가되었는지 확인
+                const targetElements = document.querySelectorAll('.translation-target');
+                log(`🔍 .translation-target 클래스를 가진 요소: ${targetElements.length}개`);
+
+                // 5. li 요소들이 제대로 포함되었는지 확인
+                const targetLiElements = document.querySelectorAll('li.translation-target');
+                log(`📝 .translation-target 클래스를 가진 li 요소: ${targetLiElements.length}개`);
+
+                if (targetLiElements.length > 0) {
+                    log('🎉 li 요소들에 성공적으로 클래스가 추가되었습니다!');
+                } else {
+                    log('⚠️ li 요소들에 클래스가 추가되지 않았습니다.');
+                    
+                    // 추가 디버깅: 추출된 텍스트 중 LI 요소들 확인
+                    const liTexts = allTexts.filter(t => t.tagName === 'LI');
+                    log(`\n추출된 LI 텍스트: ${liTexts.length}개`);
+                    liTexts.forEach((textInfo, i) => {
+                        log(`  ${i+1}. "${textInfo.text}" - element: ${textInfo.element ? textInfo.element.tagName : 'null'}`);
+                    });
+                }
+
+            } catch (error) {
+                log(`❌ 테스트 실행 중 오류: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        function clearClasses() {
+            document.querySelectorAll('.translation-target').forEach(el => {
+                el.classList.remove('translation-target');
+            });
+            log('🧹 모든 translation-target 클래스 제거 완료');
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.addEventListener('load', function() {
+            setTimeout(runTest, 500);
+        });
+    </script>
+</body>
+</html>

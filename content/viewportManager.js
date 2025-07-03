@@ -16,7 +16,7 @@ class ViewportManager {
   }
   
   init() {
-    // IntersectionObserver 설정
+    // IntersectionObserver 설정 (아직 관찰 시작 안함)
     this.observer = new IntersectionObserver(
       this.handleIntersection.bind(this),
       {
@@ -26,7 +26,7 @@ class ViewportManager {
       }
     );
     
-    console.log('✅ ViewportManager 초기화 완료');
+    console.log('✅ ViewportManager 초기화 완료 (관찰 대기 중)');
   }
   
   /**
@@ -247,6 +247,21 @@ class ViewportManager {
    * 현재 뷰포트 상태 정보
    */
   getViewportInfo() {
+    // 관찰이 시작되지 않았으면 모든 값을 0으로 반환
+    if (this.observedElements.size === 0) {
+      return {
+        observedElements: 0,
+        totalTexts: 0,
+        visibleTexts: 0,
+        pendingTranslation: 0,
+        translatedElements: 0,
+        totalCharacters: 0,
+        visibleCharacters: 0,
+        pendingCharacters: 0,
+        translatedCharacters: 0
+      };
+    }
+    
     const totalObserved = this.observedElements.size;
     const allTexts = Array.from(this.viewportTexts.values()).flat();
     const totalTexts = allTexts.length;

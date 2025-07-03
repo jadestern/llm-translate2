@@ -78,12 +78,16 @@ class TranslationPopup {
     try {
       // 저장된 번역 상태 확인
       const result = await browser.storage.local.get(['translationActive']);
-      const isActive = result.translationActive || false;
+      const isActive = result.translationActive === true; // 명시적으로 true인 경우만 활성화
       
       this.updateToggleState(isActive);
       
+      // 활성화 상태일 때만 통계 요청
       if (isActive) {
         this.requestStats();
+      } else {
+        // 비활성화 상태일 때는 통계 초기화
+        this.clearStats();
       }
     } catch (error) {
       console.error('❌ 상태 로드 실패:', error);
@@ -180,6 +184,8 @@ class TranslationPopup {
       });
     } catch (error) {
       console.error('❌ 통계 요청 실패:', error);
+      // 통계 요청 실패 시 통계 초기화
+      this.clearStats();
     }
   }
   

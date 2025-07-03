@@ -32,13 +32,8 @@ class TranslationContentScript {
       this.textExtractor = new TextExtractor();
       console.log('✅ TextExtractor 초기화 완료');
       
-      // ViewportManager 초기화
-      if (typeof ViewportManager !== 'undefined') {
-        this.viewportManager = new ViewportManager(this.textExtractor);
-        console.log('✅ ViewportManager 초기화 완료');
-      } else {
-        console.error('❌ ViewportManager를 찾을 수 없습니다');
-      }
+      // ViewportManager는 번역 활성화 시에만 초기화
+      console.log('📋 ViewportManager는 번역 활성화 시에 초기화됩니다');
     } else {
       console.error('❌ TextExtractor를 찾을 수 없습니다');
     }
@@ -215,6 +210,16 @@ class TranslationContentScript {
   activateTranslation() {
     console.log('🎯 팝업에서 번역 활성화 요청');
     this.isEnabled = true;
+    
+    // ViewportManager 초기화 (활성화 시에만)
+    if (!this.viewportManager && typeof ViewportManager !== 'undefined') {
+      this.viewportManager = new ViewportManager(this.textExtractor);
+      console.log('✅ ViewportManager 초기화 완료');
+    } else if (!this.viewportManager) {
+      console.error('❌ ViewportManager를 찾을 수 없습니다');
+      return;
+    }
+    
     this.startTextExtraction();
     this.showTranslationIndicators();
   }
@@ -293,8 +298,24 @@ class TranslationContentScript {
    * 뷰포트 통계를 팝업으로 전송
    */
   sendViewportStats() {
-    if (!this.viewportManager) {
-      console.warn('⚠️ ViewportManager가 초기화되지 않았습니다');
+    if (!this.viewportManager || !this.isEnabled) {
+      console.warn('⚠️ ViewportManager가 초기화되지 않았거나 번역이 비활성화 상태입니다');
+      
+      // 비활성화 상태일 때는 0으로 초기화된 통계 전송
+      browser.runtime.sendMessage({
+        action: 'statsUpdate',
+        stats: {
+          observedElements: 0,
+          totalTexts: 0,
+          visibleTexts: 0,
+          pendingTranslation: 0,
+          translatedElements: 0,
+          totalCharacters: 0,
+          visibleCharacters: 0,
+          pendingCharacters: 0,
+          translatedCharacters: 0
+        }
+      });
       return;
     }
     
@@ -314,8 +335,8 @@ class TranslationContentScript {
   runViewportTest() {
     console.log('🧪 뷰포트 테스트 시작');
     
-    if (!this.viewportManager) {
-      console.error('❌ ViewportManager가 초기화되지 않았습니다');
+    if (!this.viewportManager || !this.isEnabled) {
+      console.error('❌ ViewportManager가 초기화되지 않았거나 번역이 비활성화 상태입니다');
       return;
     }
     

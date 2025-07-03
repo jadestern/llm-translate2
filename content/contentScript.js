@@ -175,6 +175,15 @@ class TranslationContentScript {
       });
     }
     
+    // Character count calculations
+    const totalCharacters = allTexts.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0);
+    const viewportCharacters = viewportTexts.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0);
+    const priorityCharacters = {
+      high: byPriority.high.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0),
+      medium: byPriority.medium.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0),
+      low: byPriority.low.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0)
+    };
+
     return {
       total: allTexts.length,
       viewport: viewportTexts.length,
@@ -182,7 +191,10 @@ class TranslationContentScript {
         high: byPriority.high.length,
         medium: byPriority.medium.length,
         low: byPriority.low.length
-      }
+      },
+      totalCharacters: totalCharacters,
+      viewportCharacters: viewportCharacters,
+      byPriorityCharacters: priorityCharacters
     };
   }
   

@@ -248,18 +248,34 @@ class ViewportManager {
    */
   getViewportInfo() {
     const totalObserved = this.observedElements.size;
-    const totalTexts = Array.from(this.viewportTexts.values()).flat().length;
-    const visibleTexts = Array.from(this.viewportTexts.values())
-      .flat()
-      .filter(t => t.isVisible).length;
+    const allTexts = Array.from(this.viewportTexts.values()).flat();
+    const totalTexts = allTexts.length;
+    const visibleTexts = allTexts.filter(t => t.isVisible).length;
     const pendingCount = this.pendingTexts.size;
+    
+    // Character count calculations
+    const totalCharacters = allTexts.reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0);
+    const visibleCharacters = allTexts
+      .filter(t => t.isVisible)
+      .reduce((sum, textInfo) => sum + (textInfo.text?.length || 0), 0);
+    const pendingCharacters = Array.from(this.pendingTexts)
+      .reduce((sum, text) => sum + (text?.length || 0), 0);
+    const translatedCharacters = Array.from(this.translatedElements)
+      .reduce((sum, element) => {
+        const textsForElement = this.viewportTexts.get(element) || [];
+        return sum + textsForElement.reduce((charSum, textInfo) => charSum + (textInfo.text?.length || 0), 0);
+      }, 0);
     
     return {
       observedElements: totalObserved,
       totalTexts: totalTexts,
       visibleTexts: visibleTexts,
       pendingTranslation: pendingCount,
-      translatedElements: this.translatedElements.size
+      translatedElements: this.translatedElements.size,
+      totalCharacters: totalCharacters,
+      visibleCharacters: visibleCharacters,
+      pendingCharacters: pendingCharacters,
+      translatedCharacters: translatedCharacters
     };
   }
   

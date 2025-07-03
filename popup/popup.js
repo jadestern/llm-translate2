@@ -23,7 +23,11 @@ class TranslationPopup {
       observedElements: document.getElementById('observedElements'),
       visibleTexts: document.getElementById('visibleTexts'),
       totalTexts: document.getElementById('totalTexts'),
-      pendingTranslation: document.getElementById('pendingTranslation')
+      pendingTranslation: document.getElementById('pendingTranslation'),
+      totalCharacters: document.getElementById('totalCharacters'),
+      visibleCharacters: document.getElementById('visibleCharacters'),
+      pendingCharacters: document.getElementById('pendingCharacters'),
+      translatedCharacters: document.getElementById('translatedCharacters')
     };
     
     // 현재 탭 정보 가져오기
@@ -238,6 +242,10 @@ class TranslationPopup {
     this.elements.visibleTexts.textContent = stats.visibleTexts || 0;
     this.elements.totalTexts.textContent = stats.totalTexts || 0;
     this.elements.pendingTranslation.textContent = stats.pendingTranslation || 0;
+    this.elements.totalCharacters.textContent = stats.totalCharacters || 0;
+    this.elements.visibleCharacters.textContent = stats.visibleCharacters || 0;
+    this.elements.pendingCharacters.textContent = stats.pendingCharacters || 0;
+    this.elements.translatedCharacters.textContent = stats.translatedCharacters || 0;
   }
   
   updateProgress(progress) {
@@ -250,6 +258,10 @@ class TranslationPopup {
     this.elements.visibleTexts.textContent = '0';
     this.elements.totalTexts.textContent = '0';
     this.elements.pendingTranslation.textContent = '0';
+    this.elements.totalCharacters.textContent = '0';
+    this.elements.visibleCharacters.textContent = '0';
+    this.elements.pendingCharacters.textContent = '0';
+    this.elements.translatedCharacters.textContent = '0';
   }
 }
 

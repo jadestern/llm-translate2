@@ -25,6 +25,9 @@ class TranslationContentScript {
 
     // Background script와의 메시지 통신 설정
     this.setupMessageListener();
+    
+    // 저장된 번역 상태 확인하여 자동 활성화
+    this.checkStoredTranslationState();
   }
 
   initTextExtractor() {
@@ -62,7 +65,8 @@ class TranslationContentScript {
           this.deactivateTranslation();
           break;
         case 'getViewportStats':
-          this.sendViewportStats();
+          const stats = this.getViewportStats();
+          sendResponse(stats);
           break;
         case 'runViewportTest':
           this.runViewportTest();
@@ -294,6 +298,11 @@ class TranslationContentScript {
     this.debugLiElements();
     
     this.showTranslationIndicators();
+    
+    // 번역 활성화 시 즉시 통계 업데이트
+    setTimeout(() => {
+      this.sendViewportStats();
+    }, 100);
   }
 
   /**
@@ -494,35 +503,71 @@ class TranslationContentScript {
    * 뷰포트 통계를 팝업으로 전송
    */
   sendViewportStats() {
-    if (!this.viewportManager || !this.isEnabled) {
-      console.warn('⚠️ ViewportManager가 초기화되지 않았거나 번역이 비활성화 상태입니다');
-
-      // 비활성화 상태일 때는 0으로 초기화된 통계 전송
-      browser.runtime.sendMessage({
-        action: 'statsUpdate',
-        stats: {
-          observedElements: 0,
-          totalTexts: 0,
-          visibleTexts: 0,
-          pendingTranslation: 0,
-          translatedElements: 0,
-          totalCharacters: 0,
-          visibleCharacters: 0,
-          pendingCharacters: 0,
-          translatedCharacters: 0
-        }
-      });
-      return;
-    }
-
-    const stats = this.viewportManager.getViewportInfo();
-    console.log('📊 뷰포트 통계 전송:', stats);
-
+    const stats = this.getViewportStats();
+    
     // 팝업으로 통계 전송 (Background를 통해)
     browser.runtime.sendMessage({
       action: 'statsUpdate',
       stats: stats
     });
+  }
+
+  /**
+   * 뷰포트 통계 반환 (동기 방식)
+   */
+  getViewportStats() {
+    if (!this.viewportManager || !this.isEnabled) {
+      console.warn('⚠️ ViewportManager가 초기화되지 않았거나 번역이 비활성화 상태입니다');
+
+      // 비활성화 상태일 때는 0으로 초기화된 통계 반환
+      return {
+        observedElements: 0,
+        totalTexts: 0,
+        visibleTexts: 0,
+        pendingTranslation: 0,
+        translatedElements: 0,
+        totalCharacters: 0,
+        visibleCharacters: 0,
+        pendingCharacters: 0,
+        translatedCharacters: 0
+      };
+    }
+
+    const stats = this.viewportManager.getViewportInfo();
+    console.log('📊 뷰포트 통계 반환:', stats);
+    return stats;
+  }
+
+  /**
+   * 저장된 번역 상태 확인하여 자동 활성화
+   */
+  async checkStoredTranslationState() {
+    try {
+      const currentUrl = window.location.href;
+      const result = await browser.storage.local.get(['translationStates']);
+      const translationStates = result.translationStates || {};
+      const isActive = translationStates[currentUrl] === true;
+      
+      console.log(`📋 현재 URL: ${currentUrl}`);
+      console.log(`📦 저장된 번역 상태: ${isActive ? '활성' : '비활성'}`);
+      
+      if (isActive) {
+        console.log('📦 이 URL에 대한 번역 상태 발견: 자동 활성화');
+        // DOM이 준비되면 활성화
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => this.activateTranslation(), 100);
+          });
+        } else {
+          // 이미 준비되어 있으면 즉시 활성화
+          setTimeout(() => this.activateTranslation(), 100);
+        }
+      } else {
+        console.log('📦 이 URL에 대한 번역 상태: 비활성화');
+      }
+    } catch (error) {
+      console.error('❌ 저장된 번역 상태 확인 실패:', error);
+    }
   }
 
   /**

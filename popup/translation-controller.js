@@ -34,7 +34,15 @@ class TranslationController {
       const urlParams = new URLSearchParams(window.location.search);
       const tabId = urlParams.get('tabId');
       if (tabId) {
-        this.currentTab = { id: parseInt(tabId) };
+        try {
+          // 탭 ID로 실제 탭 정보 가져오기
+          const tab = await browser.tabs.get(parseInt(tabId));
+          this.currentTab = tab;
+          console.log('🪟 새창에서 탭 정보 로드:', tab.url);
+        } catch (error) {
+          console.error('❌ 새창에서 탭 정보 가져오기 실패:', error);
+          this.currentTab = { id: parseInt(tabId) };
+        }
       }
     }
     
@@ -227,19 +235,36 @@ class TranslationController {
     browser.runtime.onMessage.addListener((message) => {
       this.handleBackgroundMessage(message);
     });
+    
+    // Storage 변경 이벤트 리스너 (새창과 팝업 간 동기화)
+    browser.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.translationStates && this.currentTab) {
+        this.handleStorageChange(changes.translationStates);
+      }
+    });
   }
   
   async loadCurrentState() {
     try {
-      // 저장된 번역 상태 확인
-      const result = await browser.storage.local.get(['translationActive']);
-      const isActive = result.translationActive === true;
+      if (!this.currentTab || !this.currentTab.url) {
+        console.error('❌ 현재 탭 정보가 없습니다');
+        return;
+      }
+      
+      // URL별 번역 상태 확인
+      const result = await browser.storage.local.get(['translationStates']);
+      const translationStates = result.translationStates || {};
+      const currentUrl = this.currentTab.url;
+      const isActive = translationStates[currentUrl] === true;
+      
+      console.log(`📋 현재 URL: ${currentUrl}`);
+      console.log(`📦 저장된 번역 상태: ${isActive ? '활성' : '비활성'}`);
       
       this.updateToggleState(isActive);
       
       // 활성화 상태일 때만 통계 요청
       if (isActive) {
-        this.requestStats();
+        await this.requestStats();
       } else {
         // 비활성화 상태일 때는 통계 초기화
         this.clearStats();
@@ -252,11 +277,31 @@ class TranslationController {
   async handleToggleChange(isChecked) {
     console.log(`🔄 번역 토글 변경: ${isChecked ? 'ON' : 'OFF'}`);
     
+    if (!this.currentTab || !this.currentTab.url) {
+      console.error('❌ 현재 탭 정보가 없습니다');
+      return;
+    }
+    
     this.isTranslationActive = isChecked;
     this.updateToggleState(isChecked);
     
-    // 상태 저장
-    await browser.storage.local.set({ translationActive: isChecked });
+    // URL별 상태 저장
+    try {
+      const result = await browser.storage.local.get(['translationStates']);
+      const translationStates = result.translationStates || {};
+      const currentUrl = this.currentTab.url;
+      
+      if (isChecked) {
+        translationStates[currentUrl] = true;
+      } else {
+        delete translationStates[currentUrl]; // 비활성화 시 삭제
+      }
+      
+      await browser.storage.local.set({ translationStates });
+      console.log(`💾 URL별 번역 상태 저장: ${currentUrl} = ${isChecked ? '활성' : '비활성'}`);
+    } catch (error) {
+      console.error('❌ 상태 저장 실패:', error);
+    }
     
     if (isChecked) {
       // 번역 활성화
@@ -299,10 +344,10 @@ class TranslationController {
         action: 'activateTranslation'
       });
       
-      // 잠시 후 통계 요청
+      // 잠시 후 통계 요청 (즉시 실행)
       setTimeout(() => {
         this.requestStats();
-      }, 1000);
+      }, 500);
       
     } catch (error) {
       console.error('❌ 번역 활성화 실패:', error);
@@ -338,10 +383,19 @@ class TranslationController {
     if (!this.currentTab || !this.isTranslationActive) return;
     
     try {
-      // Content Script에서 현재 통계 요청
-      await browser.tabs.sendMessage(this.currentTab.id, {
+      // Content Script에서 현재 통계 요청 및 응답 직접 처리
+      const stats = await browser.tabs.sendMessage(this.currentTab.id, {
         action: 'getViewportStats'
       });
+      
+      console.log('📊 통계 응답 수신:', stats);
+      
+      if (stats) {
+        this.updateStats(stats);
+      } else {
+        console.warn('⚠️ 통계 응답이 비어있습니다');
+        this.clearStats();
+      }
     } catch (error) {
       console.error('❌ 통계 요청 실패:', error);
       // 통계 요청 실패 시 통계 초기화
@@ -420,6 +474,29 @@ class TranslationController {
         break;
       default:
         console.log('알 수 없는 메시지:', message);
+    }
+  }
+  
+  async handleStorageChange(change) {
+    if (!this.currentTab || !this.currentTab.url) return;
+    
+    const newStates = change.newValue || {};
+    const currentUrl = this.currentTab.url;
+    const isActive = newStates[currentUrl] === true;
+    
+    console.log('🔄 Storage 변경 감지 - 동기화:', { url: currentUrl, isActive });
+    
+    // 현재 UI 상태와 다르면 업데이트
+    if (this.isTranslationActive !== isActive) {
+      this.isTranslationActive = isActive;
+      this.updateToggleState(isActive);
+      
+      // 활성화 상태에 따라 통계 요청 또는 초기화
+      if (isActive) {
+        await this.requestStats();
+      } else {
+        this.clearStats();
+      }
     }
   }
   

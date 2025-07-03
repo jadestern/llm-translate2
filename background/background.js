@@ -57,6 +57,11 @@ async function injectContentScripts(tabId) {
       file: 'content/textExtractor.js'
     });
     
+    // ViewportManager 주입
+    await browser.tabs.executeScript(tabId, {
+      file: 'content/viewportManager.js'
+    });
+    
     // ContentScript 주입
     await browser.tabs.executeScript(tabId, {
       file: 'content/contentScript.js'
@@ -102,6 +107,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log('배치 번역 요청:', message);
       // TODO: Gemini API 배치 호출
       break;
+    case 'openTranslationWindow':
+      handleOpenTranslationWindow(message.currentTabId);
+      break;
     default:
       console.log('알 수 없는 메시지:', message);
   }
@@ -142,6 +150,43 @@ function forwardStatsToPopup(stats) {
   // 대신 storage를 통해 상태 공유하거나 content script를 통해 전달
   
   // 임시로 콘솔에만 출력 (팝업은 직접 content script와 통신)
+}
+
+/**
+ * 번역 창 열기 처리
+ */
+async function handleOpenTranslationWindow(currentTabId) {
+  try {
+    console.log('🪟 번역 창 열기 요청, 탭 ID:', currentTabId);
+    
+    // Content Script들이 주입되어 있는지 확인하고 필요시 주입
+    if (currentTabId) {
+      try {
+        await browser.tabs.sendMessage(currentTabId, { action: 'ping' });
+      } catch (error) {
+        console.log('🔄 Content Script 주입 필요');
+        await injectContentScripts(currentTabId);
+      }
+    }
+    
+    // 새 윈도우 생성
+    const windowUrl = browser.runtime.getURL(`popup/translation-window.html?tabId=${currentTabId || ''}`);
+    
+    const newWindow = await browser.windows.create({
+      url: windowUrl,
+      type: 'popup',
+      width: 450,
+      height: 600,
+      left: 100,
+      top: 100,
+      focused: true
+    });
+    
+    console.log('✅ 번역 창 생성 완료:', newWindow.id);
+    
+  } catch (error) {
+    console.error('❌ 번역 창 열기 실패:', error);
+  }
 }
 
 console.log('웹 번역기 Background Script 로드 완료'); 

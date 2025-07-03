@@ -1,4 +1,6 @@
-/* 팝업 기본 스타일 */
+/* 번역 컨트롤러 공통 스타일 */
+
+/* 기본 스타일 */
 body {
   margin: 0;
   padding: 0;
@@ -10,6 +12,14 @@ body {
   min-height: 400px;
 }
 
+.translation-controller {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+/* 팝업용 컨테이너 */
 .popup-container {
   padding: 16px;
   display: flex;
@@ -17,12 +27,26 @@ body {
   gap: 16px;
 }
 
+/* 윈도우용 컨테이너 */
+.window-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
 /* 헤더 */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -33,12 +57,31 @@ body {
   color: #2c3e50;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
 .version {
   font-size: 12px;
   color: #6c757d;
   background: #e9ecef;
   padding: 2px 8px;
   border-radius: 12px;
+}
+
+.close-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #c82333;
 }
 
 /* 토글 섹션 */
@@ -167,7 +210,7 @@ input:checked + .slider:before {
   gap: 8px;
 }
 
-.actions-section .action-btn {
+.action-btn {
   flex: 1;
   padding: 10px 16px;
   border: none;
@@ -208,6 +251,65 @@ input:checked + .slider:before {
 
 .action-btn.window-btn:hover {
   background: #1e7e34;
+}
+
+/* 윈도우 전용 - 컨트롤 버튼들 */
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.control-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn.primary {
+  background: #007bff;
+  color: white;
+}
+
+.control-btn.primary:hover {
+  background: #0056b3;
+}
+
+.control-btn.secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.control-btn.secondary:hover {
+  background: #545b62;
+}
+
+/* 실시간 정보 (윈도우에서만) */
+.live-info {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 300px;
+}
+
+.live-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.info-text {
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.4;
 }
 
 /* 푸터 */
@@ -255,4 +357,4 @@ input:checked + .slider:before {
 
 .pulse {
   animation: pulse 1.5s infinite;
-} 
+}

@@ -45,6 +45,10 @@ class TranslationContentScript {
       console.log('📩 메시지 수신:', message);
       
       switch (message.action) {
+        case 'ping':
+          // Content Script 존재 확인용
+          sendResponse({ pong: true });
+          break;
         case 'startTranslation':
           this.startTextExtraction();
           break;
